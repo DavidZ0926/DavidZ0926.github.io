@@ -283,6 +283,25 @@ html:not(.js) .orb { animation: drift var(--d) ease-in-out infinite alternate; }
 .glass.is-lit::after { opacity: 1; }
 .glass > * { position: relative; z-index: 2; }
 
+/* WebGL 玻璃（main.js 第 7 节）：画布画出折射、磨砂和高光，
+   叠在它上面的仍是 1px 渐变边框、指针光晕和内容；外投影照旧由 box-shadow 负责 */
+.glass > .glass-gl {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.glass:not(.has-gl) > .glass-gl { display: none; }
+.glass.has-gl {
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: var(--glass-shadow);
+}
+
 /* ---------- Top bar ---------- */
 .topbar {
   position: fixed;
@@ -713,7 +732,7 @@ html:not(.js) .orb { animation: drift var(--d) ease-in-out infinite alternate; }
 
 @media (forced-colors: active) {
   .glass { border: 1px solid CanvasText; }
-  .glass::before, .glass::after, .wallpaper { display: none; }
+  .glass::before, .glass::after, .glass > .glass-gl, .wallpaper { display: none; }
 }
 
 /* ---------- Small screens ---------- */
