@@ -645,7 +645,7 @@ html.lg-lens .glass[data-lens].has-lens { backdrop-filter: var(--lens); }
 
 .friend-body { display: flex; flex-direction: column; min-width: 0; }
 .friend-name { font-size: 17px; font-weight: 600; line-height: 1.3; }
-.friend-desc { margin-top: 4px; font-size: 14px; line-height: 1.55; color: var(--label-2); }
+.friend-desc { margin-top: 4px; font-size: 14px; line-height: 1.55; color: var(--label-2); text-wrap: pretty; }
 .friend-url { margin-top: 10px; font-size: 13px; color: var(--accent-text); }
 
 .friend-arrow {
