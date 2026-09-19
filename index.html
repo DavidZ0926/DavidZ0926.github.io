@@ -52,11 +52,8 @@
     </div>
   </div>
 
-  <!-- Liquid Glass 折射滤镜由 main.js 按元素尺寸生成（仅 Chromium） -->
-  <svg class="lens-defs" width="0" height="0" aria-hidden="true" focusable="false"><defs id="lens-defs"></defs></svg>
-
   <!-- 滚过大标题后浮现的紧凑导航，对应 iOS 的大标题折叠 -->
-  <header class="topbar glass" data-glass data-lens>
+  <header class="topbar glass" data-glass>
     <a class="topbar-title" href="#top">张林晖</a>
     <nav class="topbar-nav" aria-label="页面导航">
       <a href="#friends">友链</a>
@@ -64,7 +61,7 @@
     </nav>
   </header>
 
-  <button class="theme-toggle glass" data-glass data-lens type="button" aria-label="切换到深色模式" title="切换到深色模式">
+  <button class="theme-toggle glass" data-glass type="button" aria-label="切换到深色模式" title="切换到深色模式">
     <span class="swap" aria-hidden="true">
       <svg class="icon icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.8v2.1M12 19.1v2.1M2.8 12h2.1M19.1 12h2.1M5.5 5.5l1.5 1.5M17 17l1.5 1.5M5.5 18.5 7 17M17 7l1.5-1.5"/></svg>
       <svg class="icon icon-moon" viewBox="0 0 24 24"><path d="M20.2 14.6A8.4 8.4 0 0 1 9.4 3.8a8.4 8.4 0 1 0 10.8 10.8Z"/></svg>
@@ -73,7 +70,7 @@
 
   <main id="top">
     <section class="hero" aria-labelledby="name">
-      <article class="profile glass glass-thick" data-glass data-lens>
+      <article class="profile glass glass-thick" data-glass>
         <picture class="avatar rise" style="--i:0">
           <source srcset="assets/avatar.webp" type="image/webp">
           <img src="assets/avatar.jpg" alt="张林晖的头像" width="256" height="256" decoding="async" fetchpriority="high">
@@ -122,7 +119,7 @@
       <!-- 新增友链：复制一整个 <li> 改内容即可 -->
       <ul class="friend-list" role="list">
         <li>
-          <a class="friend glass" data-glass data-lens data-reveal href="http://yeyaozhi.eu.cc/" target="_blank" rel="noopener">
+          <a class="friend glass" data-glass data-reveal href="http://yeyaozhi.eu.cc/" target="_blank" rel="noopener">
             <img class="friend-avatar" src="assets/friends/yeyaozhi.svg" alt="" width="48" height="48" loading="lazy" decoding="async">
             <span class="friend-body">
               <span class="friend-name">叶耀之</span>
@@ -133,7 +130,7 @@
           </a>
         </li>
         <li>
-          <a class="friend glass" data-glass data-lens data-reveal href="https://lkj-louis.github.io/my-personal-info-page/" target="_blank" rel="noopener">
+          <a class="friend glass" data-glass data-reveal href="https://lkj-louis.github.io/my-personal-info-page/" target="_blank" rel="noopener">
             <img class="friend-avatar" src="assets/friends/lkj-louis.svg" alt="" width="48" height="48" loading="lazy" decoding="async">
             <span class="friend-body">
               <span class="friend-name">卢科均 · Louis</span>

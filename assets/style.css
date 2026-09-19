@@ -237,7 +237,6 @@ html:not(.js) .orb { animation: drift var(--d) ease-in-out infinite alternate; }
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-.lens-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 
 /* ---------- Glass ---------- */
 .glass {
@@ -250,12 +249,8 @@ html:not(.js) .orb { animation: drift var(--d) ease-in-out infinite alternate; }
   box-shadow: var(--glass-shadow), var(--glass-inner);
 }
 .glass-thick { background: var(--glass-fill-thick); }
-.profile { --frost: 7; }
-.friend  { --frost: 6; }
-.topbar  { --frost: 14; background: var(--bar-fill); }
+.topbar { background: var(--bar-fill); }
 
-/* Chromium：换成带边缘折射的 SVG 滤镜（main.js 生成 --lens） */
-html.lg-lens .glass[data-lens].has-lens { backdrop-filter: var(--lens); }
 
 /* 镜面高光沿边缘：跟随指针转动 */
 .glass::before {
@@ -341,7 +336,6 @@ html.lg-lens .glass[data-lens].has-lens { backdrop-filter: var(--lens); }
 
 /* ---------- Theme toggle ---------- */
 .theme-toggle {
-  --frost: 10;
   position: fixed;
   top: max(12px, env(safe-area-inset-top));
   right: max(16px, env(safe-area-inset-right));
@@ -702,14 +696,12 @@ html.lg-lens .glass[data-lens].has-lens { backdrop-filter: var(--lens); }
 
 /* ---------- Accessibility fallbacks ---------- */
 @media (prefers-reduced-transparency: reduce) {
-  .glass,
-  html.lg-lens .glass[data-lens].has-lens {
+  .glass {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     background: rgb(250 250 252 / .97);
   }
-  [data-theme="dark"] .glass,
-  [data-theme="dark"] .glass[data-lens].has-lens { background: rgb(28 30 38 / .97); }
+  [data-theme="dark"] .glass { background: rgb(28 30 38 / .97); }
 }
 
 @media (prefers-contrast: more) {

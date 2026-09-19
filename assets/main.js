@@ -1,11 +1,10 @@
 /* 张林晖 · 个人主页 — 交互
-   1. Liquid Glass 边缘折射（Chromium：SVG 位移贴图作为 backdrop-filter）
-   2. 指针高光 + 边缘镜面随指针转动
-   3. 滚过大标题后浮现紧凑顶栏
-   4. 复制邮箱
-   5. 滚动进入
-   6. 浅色 / 深色切换
-   7. 活的壁纸：漂浮色球 + 随机心跳的心电图 */
+   1. 指针高光 + 边缘镜面随指针转动
+   2. 滚过大标题后浮现紧凑顶栏
+   3. 复制邮箱
+   4. 滚动进入
+   5. 浅色 / 深色切换
+   6. 活的壁纸：漂浮色球 + 随机心跳的心电图 */
 (() => {
   'use strict';
 
@@ -14,151 +13,9 @@
 
   const mq = (q) => window.matchMedia(q);
   const reduceMotion = mq('(prefers-reduced-motion: reduce)');
-  const reduceTransparency = mq('(prefers-reduced-transparency: reduce)');
   const finePointer = mq('(hover: hover) and (pointer: fine)');
 
-  /* ---------- 1. Lensing ---------- */
-  const isChromium =
-    (navigator.userAgentData?.brands || []).some((b) => b.brand === 'Chromium') ||
-    /\bChrom(e|ium)\/\d+/.test(navigator.userAgent);
-
-  const SVG_NS = 'http://www.w3.org/2000/svg';
-  const defs = document.getElementById('lens-defs');
-  const lensEls = [...document.querySelectorAll('[data-lens]')];
-
-  const smoothstep = (a, b, x) => {
-    const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
-    return t * t * (3 - 2 * t);
-  };
-
-  // 圆角矩形的有向距离场 →
-  //   map：边缘一圈朝内采样的位移贴图（R=x, G=y, 128 为不动）
-  //   rim：唇边遮罩（alpha），唇边保持清透，中心磨砂
-  function buildMaps(w, h, r, bezel) {
-    const make = () => {
-      const c = document.createElement('canvas');
-      c.width = w;
-      c.height = h;
-      const ctx = c.getContext('2d');
-      return { c, ctx, img: ctx.createImageData(w, h) };
-    };
-    const M = make();
-    const R = make();
-    const px = M.img.data;
-    const rim = R.img.data;
-    const hw = w / 2;
-    const hh = h / 2;
-
-    for (let y = 0; y < h; y++) {
-      const dy = y + 0.5 - hh;
-      const ay = Math.abs(dy);
-      const qy = ay - (hh - r);
-      for (let x = 0; x < w; x++) {
-        const dx = x + 0.5 - hw;
-        const ax = Math.abs(dx);
-        const qx = ax - (hw - r);
-
-        let dist, nx, ny;
-        if (qx > 0 && qy > 0) {
-          const len = Math.hypot(qx, qy) || 1;
-          dist = r - len;
-          nx = qx / len;
-          ny = qy / len;
-        } else if (qx > qy) {
-          dist = r - qx; nx = 1; ny = 0;
-        } else {
-          dist = r - qy; nx = 0; ny = 1;
-        }
-        if (dx < 0) nx = -nx;
-        if (dy < 0) ny = -ny;
-
-        // 凸透镜唇边：越靠边折射越强，向内平滑衰减
-        const t = dist > 0 ? Math.max(0, 1 - dist / bezel) : 0;
-        const m = t * t * (1.4 - 0.4 * t);
-        const i = (y * w + x) * 4;
-        px[i] = 128 - nx * m * 127;
-        px[i + 1] = 128 - ny * m * 127;
-        px[i + 2] = 128;
-        px[i + 3] = 255;
-        rim[i] = rim[i + 1] = rim[i + 2] = 255;
-        rim[i + 3] = 255 * smoothstep(0.15, 0.7, t);
-      }
-    }
-    M.ctx.putImageData(M.img, 0, 0);
-    R.ctx.putImageData(R.img, 0, 0);
-    return { map: M.c.toDataURL('image/png'), rim: R.c.toDataURL('image/png') };
-  }
-
-  function svg(tag, attrs, parent) {
-    const el = document.createElementNS(SVG_NS, tag);
-    for (const k in attrs) el.setAttribute(k, attrs[k]);
-    if (parent) parent.appendChild(el);
-    return el;
-  }
-
-  function renderLens(el, index) {
-    const w = Math.round(el.offsetWidth);
-    const h = Math.round(el.offsetHeight);
-    if (!w || !h) return;
-    const key = `${w}x${h}`;
-    if (el.dataset.lensKey === key) return;
-    el.dataset.lensKey = key;
-
-    const cs = getComputedStyle(el);
-    const r = Math.min(parseFloat(cs.borderTopLeftRadius) || 0, w / 2, h / 2);
-    const big = Math.min(w, h) > 120;
-    const bezel = Math.min(big ? 34 : 14, r || 14);
-    const scale = big ? 84 : 26;
-    const frost = parseFloat(cs.getPropertyValue('--frost')) || (big ? 10 : 8);
-    const id = `lens-${index}`;
-    const maps = buildMaps(w, h, r, bezel);
-
-    defs.querySelector(`#${id}`)?.remove();
-    const f = svg('filter', {
-      id,
-      x: 0, y: 0, width: w, height: h,
-      filterUnits: 'userSpaceOnUse',
-      primitiveUnits: 'userSpaceOnUse',
-      'color-interpolation-filters': 'sRGB',
-    }, defs);
-    const img = { x: 0, y: 0, width: w, height: h, preserveAspectRatio: 'none' };
-    const disp = { in2: 'map', scale, xChannelSelector: 'R', yChannelSelector: 'G' };
-    // 小控件（顶栏）：整体磨砂 + 边缘折射，保证上面的文字可读
-    svg('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: frost, edgeMode: 'duplicate', result: 'frost' }, f);
-    svg('feImage', { ...img, href: maps.map, result: 'map' }, f);
-    svg('feDisplacementMap', { ...disp, in: 'frost', result: 'glass' }, f);
-    if (big) {
-      // 大面板：中心磨砂，唇边清透、只折射（像厚玻璃的边）
-      svg('feImage', { ...img, href: maps.rim, result: 'rim' }, f);
-      svg('feDisplacementMap', { ...disp, in: 'SourceGraphic', result: 'clearLens' }, f);
-      svg('feComposite', { in: 'clearLens', in2: 'rim', operator: 'in', result: 'lip' }, f);
-      svg('feComposite', { in: 'lip', in2: 'glass', operator: 'over', result: 'glass' }, f);
-    }
-    svg('feColorMatrix', { in: 'glass', type: 'saturate', values: 1.6 }, f);
-
-    el.style.setProperty('--lens', `url(#${id})`);
-    el.classList.add('has-lens');
-  }
-
-  if (isChromium && defs && !reduceTransparency.matches) {
-    root.classList.add('lg-lens');
-    let pending = null;
-    const ro = new ResizeObserver((entries) => {
-      pending ??= new Set();
-      entries.forEach((e) => pending.add(e.target));
-      clearTimeout(ro.t);
-      ro.t = setTimeout(() => {
-        pending.forEach((el) => renderLens(el, lensEls.indexOf(el)));
-        pending = null;
-      }, 120);
-    });
-    lensEls.forEach((el, i) => {
-      renderLens(el, i);
-      ro.observe(el);
-    });
-  }
-
-  /* ---------- 2. Pointer light ---------- */
+  /* ---------- 1. Pointer light ---------- */
   const glassEls = document.querySelectorAll('[data-glass]');
   const REST_ANGLE = 135;
 
@@ -216,7 +73,7 @@
     el.addEventListener('pointercancel', release);
   });
 
-  /* ---------- 3. Compact top bar ---------- */
+  /* ---------- 2. Compact top bar ---------- */
   const topbar = document.querySelector('.topbar');
   const title = document.getElementById('name');
   if (topbar && title && 'IntersectionObserver' in window) {
@@ -227,7 +84,7 @@
     }, { rootMargin: '-72px 0px 0px 0px', threshold: [0, 1] }).observe(title);
   }
 
-  /* ---------- 4. Copy email ---------- */
+  /* ---------- 3. Copy email ---------- */
   const live = document.getElementById('live');
 
   function fallbackCopy(text) {
@@ -262,7 +119,7 @@
     });
   });
 
-  /* ---------- 5. Reveal on scroll ---------- */
+  /* ---------- 4. Reveal on scroll ---------- */
   const revealEls = document.querySelectorAll('[data-reveal]');
   if ('IntersectionObserver' in window) {
     const io = new IntersectionObserver((entries) => {
@@ -286,7 +143,7 @@
     revealEls.forEach((el) => el.classList.add('is-in'));
   }
 
-  /* ---------- 6. Theme ---------- */
+  /* ---------- 5. Theme ---------- */
   const toggle = document.querySelector('.theme-toggle');
   const metaTheme = document.querySelector('meta[name="theme-color"]');
   const systemDark = mq('(prefers-color-scheme: dark)');
@@ -332,8 +189,8 @@
     }).catch(() => {});
   });
 
-  /* ---------- 7. Living wallpaper ---------- */
-  // 7a. 色球：两组不可公约的正弦叠加 → 不重复的有机漂浮；再叠加指针视差与滚动视差
+  /* ---------- 6. Living wallpaper ---------- */
+  // 6a. 色球：两组不可公约的正弦叠加 → 不重复的有机漂浮；再叠加指针视差与滚动视差
   const orbs = [...document.querySelectorAll('.orb')].map((el, i) => ({
     el,
     fx1: 0.30 + i * 0.05, fy1: 0.24 + i * 0.06,
@@ -362,7 +219,7 @@
     }
   }
 
-  // 7b. 心电图：监护仪式扫描，心率在 56–96 次/分之间随机游走，逐搏间期与波幅都有随机抖动
+  // 6b. 心电图：监护仪式扫描，心率在 56–96 次/分之间随机游走，逐搏间期与波幅都有随机抖动
   function createECG(wrap) {
     const canvas = wrap?.querySelector('.ecg-live');
     const ctx = canvas?.getContext('2d');
